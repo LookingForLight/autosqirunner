@@ -1,0 +1,36 @@
+{% from 'bootstrap/utils.html' import render_static %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    {{ bootstrap.load_css() }}
+    {{ render_static('css', 'css/signin.css') }}
+</head>
+<body class="text-center">
+<form class="form-signin" method="post">
+    {{ form.csrf_token }}
+    <img class="mb-4" src="https://gw.alicdn.com/tps/TB1W_X6OXXXXXcZXVXXXXXXXXXX-400-400.png" alt="" width="72"
+         height="72">
+    <h1 class="h3 mb-3 font-weight-normal">管理员登录</h1>
+    {% if form.Password.errors[0] or form.Username.errors[0] %}
+        <div class="alert alert-danger" role="alert">
+            {{ form.Password.errors[0] }} {{ form.Username.errors[0] }}
+        </div>
+    {% endif %}
+
+    <label class="sr-only">{{ form.Username.label }}</label>
+    {{ form.Username }}
+    <label for="inputPassword" class="sr-only">{{ form.Password.label }}</label>
+    {{ form.Password }}
+    <div class="checkbox mb-3">
+        <label>
+            <input type="checkbox" value="remember-me"> Remember me
+        </label>
+    </div>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
+    <p class="mt-5 mb-3 text-muted">&copy; 2017-2018</p>
+</form>
+{{ bootstrap.load_js() }}
+{{ render_static('js', 'js/index.js') }}
+</body>
+</html>
