@@ -31,10 +31,10 @@
             <div class="col-sm-10 ">
                 {% for value,item in form.request_method.choices %}
                 <div class="custom-control custom-radio custom-control-inline">
-                    <input class="custom-control-input" type="radio" value={{ value }} id={{ item }} name="method_options"
+                    <input class="custom-control-input" type="radio" value={{ value }} id={{ value }} name="method_options"
 
                     {% if value=='post' %} checked {% endif %}>
-                    <label class="custom-control-label" for={{ item }}>
+                    <label class="custom-control-label" for={{ value }}>
                       {{ item }}
                     </label>
                 </div>
