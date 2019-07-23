@@ -4,6 +4,7 @@ import requests
 import json
 from datetime import datetime
 
+from utils.log import Log
 class Client():
 
     def __init__(self,server_ip,server_root,admin_token='',taskid='',filepath=None):
@@ -31,8 +32,16 @@ class Client():
         option_set_api = self.server + '/option/' +self.taskid+ '/set'
         status = requests.post(option_set_api,json=options,headers = self.headers).json()
         if status['success']:
-            print("设置配置文件成功")
+            Log.info('设置参数成功')
+            return True
 
+    def set_taskid_options(self,taskid,options):
+        '''通过taskid设置url,data等'''
+        option_set_api = self.server + '/option/' +taskid+ '/set'
+        status = requests.post(option_set_api,json=options,headers = self.headers).json()
+        if status['success']:
+            Log.info('设置参数成功')
+            return True
 
     def start_target_scan(self):
         '''开始扫描的方法,成功开启扫描返回True，开始扫描失败返回False'''
@@ -66,7 +75,7 @@ class Client():
              if (r.json()['data']):
                  return r.json()['data']
              else:
-                 return None
+                 return False
 
     def get_all_task_list(self):
         '''获取所有任务列表'''
@@ -107,21 +116,30 @@ class Client():
         return r.json()
 
 if __name__ == '__main__':
-    my = Client('10.101.52.2','8775',admin_token='710092afc952231b8ab984691aec1a0e')
-    # print "taskid:",my.create_new_task()
-    # options = {
-    #
-    #     "url":"http://127.0.0.1:8088/dvwa/vulnerabilities/sqli?id=2&Submit=Submit",
-    #     "cookie":"security=low; security=low; PHPSESSID=s64i0e40hio3lhvcn7i9u9pv58"
-    # }
-    # my.set_task_options(options)
-    # my.start_target_scan()
-    # while True:
-    #     status = my.get_scan_status()
-    #     if status:
-    #         result = my.get_result()
-    #
-    #         print result
-    #         break
-    #     else:
-    #         continue
+    my = Client('10.101.52.2','8775',admin_token=' 07df5809300013183d5f9292e6e2d46e')
+
+
+    print ("taskid:",my.create_new_task())
+    print('takslist:',my.get_all_task_list())
+    options = {
+
+        "url":"http://127.0.0.1:8088/dvwa/vulnerabilities/sqli",
+        "cookie":"security=low; security=low; PHPSESSID=siiu8b20e03moi6p1sdravk3co",
+        "method":"POST",
+        "data":'id=123'
+    }
+
+    if my.set_task_options(options):
+
+        my.start_target_scan()
+        print('扫描开始时间:',my.start_scan_time)
+        while True:
+            status = my.get_scan_status()
+            if status:
+                result = my.get_result()
+                print('扫描结束时间:', my.end_scan_time)
+                print(result)
+                break
+            else:
+
+                continue
