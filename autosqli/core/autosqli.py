@@ -125,8 +125,7 @@ if __name__ == '__main__':
 
         "url":"http://127.0.0.1:8088/dvwa/vulnerabilities/sqli",
         "cookie":"security=low; security=low; PHPSESSID=siiu8b20e03moi6p1sdravk3co",
-        "method":"POST",
-        "data":'id=123'
+        "method":"GET",
     }
 
     if my.set_task_options(options):

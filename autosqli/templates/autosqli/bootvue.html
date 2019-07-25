@@ -1,0 +1,122 @@
+{% from 'bootstrap/utils.html' import render_static %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>在线sql注入</title>
+    {{ bootstrap.load_css() }}
+    {{ render_static('css', 'css/signin.css') }}
+</head>
+<body>
+
+<div class="container" id="vueapp">
+    <h1 class="h3 mb-3 font-weight-normal text-center">在线sql注入</h1>
+    <div class="row mx-auto w-75">
+        <div class="col-6">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#myModal">新增</button>
+            </div>
+            <button type="button" class="btn btn-outline-warning btn-sm" @click="delRows">删除</button>
+        </div>
+    </div>
+    <div class="modal fade bd-example-modal-lg" id="myModal">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">请求参数</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form >
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label" for="url">TEST URL</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" type="text" name="test_url" required="required" placeholder="请求参数" v-model="newRow.url" >
+                            </div>
+{#                            {[newRow.url]}#}
+                        </div>
+                        <div class="form-group row">
+
+                            <label for="method" class="col-sm-2 col-form-label">请求方法</label>
+                            <div class="col-sm-10 ">
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="get_option" value="GET" v-model="newRow.method">
+                                  <label class="form-check-label" for="get">GET</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="post_option" value="POST" v-model="newRow.method" >
+                                  <label class="form-check-label" for="post">POST</label>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="request_params" class="col-sm-2 col-form-label">请求参数</label>
+                            <div class="col-sm-10">
+                                <textarea id="request_params" name="request_data" required="required" rows="6" class="form-control" v-model="newRow.params"></textarea>
+                            </div>
+{#                            <P>xxxx{[newRow.params]}</P>#}
+                        </div>
+                        <div class="form-group row">
+                            <label for="ignore_params" class="col-sm-2 col-form-label">忽略注入字段</label>
+                            <div class="col-sm-10">
+                                <input id="ignore_params" name="ignore_params" placeholder="输入不要检测的字段名" type="text" value="" class="form-control" v-model="newRow.ignore">
+                            </div>
+{#                            <P>yyyy{[newRow.ignore]}</P>#}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal fade" id="myModal2">
+
+    </div>
+</div>
+
+{{ bootstrap.load_js() }}
+{{ render_static('js', 'js/index.js') }}
+{{ render_static('js', 'js/vue.min.js') }}
+<script>
+    new Vue({
+        delimiters: ['{[', ']}'],
+
+        el:"#vueapp",
+        data:{
+            "hometitle":"哈哈哈哈猜",
+            "newRow":{
+                "url":"",
+                "method":"POST",
+                "params":"",
+                "ignore":""
+
+            }
+        },
+        methods:{
+            delRows:function () {
+                if (this.checkedRows.length <= 0){
+                    alert("您未选择需要删除的数据");
+                    return false;
+                }
+                if (!confirm("您确定要删除选择的数据吗？")){
+                    return false;
+                }
+                for(var i=0;i<this.checkedRows.length;i++){
+                    var checkedRowIndex = this.checkedRows[i];
+                    this.facilities = $.grep(this.facilities,function (facility,j) {
+                        return j != checkedRowIndex;
+                    });
+                }
+                this.checkedRows = [];
+            }
+        }
+    })
+</script>
+</body>
+</html>
