@@ -45,7 +45,7 @@
                                   <label class="form-check-label" for="get">GET</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="post_option" value="POST" v-model="newRow.method" >
+                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="post_option" value="POST" v-model="newRow.method" checked>
                                   <label class="form-check-label" for="post">POST</label>
                                 </div>
 
@@ -69,20 +69,43 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
-                    <button type="button" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-primary" data-dismiss='modal' @click="addRecord">保存</button>
                 </div>
             </div>
         </div>
 
     </div>
-    <div class="modal fade" id="myModal2">
 
+    <div class="row mx-auto w-75">
+        <div class="col-12">
+            <table class="table table-hover table-success">
+                <thead class="thead-default">
+                <tr>
+                    <th><input type="checkbox"></th>
+                    <th>序号</th>
+                    <th>任务ID</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(facility,index) in records">
+                    <td><input type="checkbox" :value="index" v-model="checkedRows"></td>
+                    <td>{[index+1]}</td>
+                    <td>{[facility.url]}</td>
+                    <td>{[facility.method]}</td>
+
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 {{ bootstrap.load_js() }}
 {{ render_static('js', 'js/index.js') }}
 {{ render_static('js', 'js/vue.min.js') }}
+{{ render_static('js', 'js/axios.min.js') }}
 <script>
     new Vue({
         delimiters: ['{[', ']}'],
@@ -90,13 +113,19 @@
         el:"#vueapp",
         data:{
             "hometitle":"哈哈哈哈猜",
+            "records":[],
             "newRow":{
                 "url":"",
-                "method":"POST",
+                "method":"",
                 "params":"",
                 "ignore":""
 
-            }
+            },
+            "checkedRows":[]
+        },
+        created:function () {
+            console.log("222")
+
         },
         methods:{
             delRows:function () {
@@ -109,11 +138,22 @@
                 }
                 for(var i=0;i<this.checkedRows.length;i++){
                     var checkedRowIndex = this.checkedRows[i];
-                    this.facilities = $.grep(this.facilities,function (facility,j) {
+                    this.records = $.grep(this.records,function (records,j) {
                         return j != checkedRowIndex;
                     });
                 }
                 this.checkedRows = [];
+            },
+            addRecord:function () {
+                this.records.push(this.newRow);
+
+                this.newRow = {};
+                console.log(JSON.stringify(this.records))
+            },
+            getRecord:function () {
+
+                var url = "http://10.101.52.2:5000/autosqli/recordlist"
+
             }
         }
     })

@@ -81,8 +81,7 @@ class Client():
         '''获取所有任务列表'''
         r = requests.get(self.server + '/admin/' + self.admin_token + "/list")
         if r.json()['success']:
-            #print(r.json()['tasks'])
-            return r.json()['tasks']
+            return r.json()
         else:
             return None
 
@@ -119,26 +118,26 @@ if __name__ == '__main__':
     my = Client('10.101.52.2','8775',admin_token=' 07df5809300013183d5f9292e6e2d46e')
 
 
-    print ("taskid:",my.create_new_task())
+    # print ("taskid:",my.create_new_task())
     print('takslist:',my.get_all_task_list())
-    options = {
-
-        "url":"http://127.0.0.1:8088/dvwa/vulnerabilities/sqli",
-        "cookie":"security=low; security=low; PHPSESSID=siiu8b20e03moi6p1sdravk3co",
-        "method":"GET",
-    }
-
-    if my.set_task_options(options):
-
-        my.start_target_scan()
-        print('扫描开始时间:',my.start_scan_time)
-        while True:
-            status = my.get_scan_status()
-            if status:
-                result = my.get_result()
-                print('扫描结束时间:', my.end_scan_time)
-                print(result)
-                break
-            else:
-
-                continue
+    # options = {
+    #
+    #     "url":"http://127.0.0.1:8088/dvwa/vulnerabilities/sqli",
+    #     "cookie":"security=low; security=low; PHPSESSID=siiu8b20e03moi6p1sdravk3co",
+    #     "method":"GET",
+    # }
+    #
+    # if my.set_task_options(options):
+    #
+    #     my.start_target_scan()
+    #     print('扫描开始时间:',my.start_scan_time)
+    #     while True:
+    #         status = my.get_scan_status()
+    #         if status:
+    #             result = my.get_result()
+    #             print('扫描结束时间:', my.end_scan_time)
+    #             print(result)
+    #             break
+    #         else:
+    #
+    #             continue
