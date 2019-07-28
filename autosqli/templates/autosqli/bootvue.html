@@ -8,15 +8,11 @@
 </head>
 <body>
 
+
 <div class="container" id="vueapp">
-    <h1 class="h3 mb-3 font-weight-normal text-center">在线sql注入</h1>
-    <div class="row mx-auto w-75">
-        <div class="col-6">
-            <div class="btn-group">
-                <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#myModal">新增</button>
-            </div>
-            <button type="button" class="btn btn-outline-warning btn-sm" @click="delRows">删除</button>
-        </div>
+    <div class="row mx-auto w-100">
+        <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">新增</button>
+{#            <button type="button" class="btn btn-outline-warning btn-sm" @click="delRows">删除</button>#}
     </div>
     <div class="modal fade bd-example-modal-lg" id="myModal">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -32,8 +28,11 @@
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label" for="url">TEST URL</label>
                             <div class="col-sm-10">
-                                <input class="form-control" type="text" name="test_url" required="required" placeholder="请求参数" v-model="newRow.url" >
+                                <input class="form-control" type="text" name="test_url"  placeholder="请求参数" v-model="newRow.url" required>
+                                <p style="color:red" v-if="urlRequired=='true'">url不能为空</p>
+
                             </div>
+
 {#                            {[newRow.url]}#}
                         </div>
                         <div class="form-group row">
@@ -45,18 +44,23 @@
                                   <label class="form-check-label" for="get">GET</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="post_option" value="POST" v-model="newRow.method" checked>
+                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="post_option" value="POST" v-model="newRow.method">
                                   <label class="form-check-label" for="post">POST</label>
+
+
                                 </div>
+                                <p style="color:red" v-if="methodRequired=='true'">method不能为空</p>
 
                             </div>
+
                         </div>
                         <div class="form-group row">
                             <label for="request_params" class="col-sm-2 col-form-label">请求参数</label>
                             <div class="col-sm-10">
-                                <textarea id="request_params" name="request_data" required="required" rows="6" class="form-control" v-model="newRow.params"></textarea>
+                                <textarea id="request_params" name="request_data"  rows="6" class="form-control" v-model="newRow.data" required></textarea>
                             </div>
-{#                            <P>xxxx{[newRow.params]}</P>#}
+
+
                         </div>
                         <div class="form-group row">
                             <label for="ignore_params" class="col-sm-2 col-form-label">忽略注入字段</label>
@@ -69,36 +73,39 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
-                    <button type="button" class="btn btn-primary" data-dismiss='modal' @click="addRecord">保存</button>
+                    <button type="button" class="btn btn-primary"  @click="addRecord">保存</button>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <div class="row mx-auto w-75">
-        <div class="col-12">
-            <table class="table table-hover table-success">
-                <thead class="thead-default">
+    <div class="row mx-auto w-100 m-2">
+{#        <div class="col-12">#}
+            <table class="table  table-bordered ">
+                <thead class="thead-dark">
                 <tr>
-                    <th><input type="checkbox"></th>
                     <th>序号</th>
                     <th>任务ID</th>
+                    <th>状态</th>
                     <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="(facility,index) in records">
-                    <td><input type="checkbox" :value="index" v-model="checkedRows"></td>
+                <tr v-for="(record,index) in records">
                     <td>{[index+1]}</td>
-                    <td>{[facility.url]}</td>
-                    <td>{[facility.method]}</td>
-
+                    <td>{[record.taskid]}</td>
+                    <td>{[record.status]}</td>
+                    <td>
+                            <button type="button" class="btn btn-outline-info btn-sm" @click="actRecord(record.taskid)">运行</button>
+                            <button v-if="record.status=='terminated'" type="button" class="btn btn-outline-info btn-sm" @click="getResult(record.taskid)">查看结果</button>
+                            <button v-if="record.status=='terminated'" type="button" class="btn btn-outline-info btn-sm" @click="getLog(record.taskid)">查看注入日志</button>
+                            <button type="button" class="btn btn-outline-info btn-sm" @click="delRecord(record.taskid)">删除</button>
+                    </td>
 
                 </tr>
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 
@@ -112,48 +119,103 @@
 
         el:"#vueapp",
         data:{
-            "hometitle":"哈哈哈哈猜",
             "records":[],
             "newRow":{
                 "url":"",
                 "method":"",
-                "params":"",
+                "data":"",
                 "ignore":""
 
             },
-            "checkedRows":[]
+            "urlRequired":false,
+            "methodRequired":false,
+
+            "baseurl":"http://127.0.0.1:5000/autosqli/"
         },
         created:function () {
-            console.log("222")
-
+            this.getRecords();
         },
         methods:{
-            delRows:function () {
-                if (this.checkedRows.length <= 0){
-                    alert("您未选择需要删除的数据");
-                    return false;
-                }
-                if (!confirm("您确定要删除选择的数据吗？")){
-                    return false;
-                }
-                for(var i=0;i<this.checkedRows.length;i++){
-                    var checkedRowIndex = this.checkedRows[i];
-                    this.records = $.grep(this.records,function (records,j) {
-                        return j != checkedRowIndex;
-                    });
-                }
-                this.checkedRows = [];
-            },
             addRecord:function () {
-                this.records.push(this.newRow);
+
+                var _this = this;
+                var url = _this.baseurl+'addrecord';
+
+                if (_this.newRow.url==""){
+                    _this.urlRequired='true'
+                    return
+
+                }
+                if (_this.newRow.method==""){
+                    _this.methodRequired='true'
+                    return
+                }
+
+                axios.post(url,_this.newRow).then(function (res) {
+                    var resData = res.data;
+                    console.log(JSON.stringify(resData))
+                    if(resData.code=='0000'){
+                        alert("创建成功！")
+                        location.reload();
+                    }
+
+                })
 
                 this.newRow = {};
                 console.log(JSON.stringify(this.records))
             },
-            getRecord:function () {
+            getRecords:function () {
+                _this = this;
+                //设置请求路径
+                var url = _this.baseurl+"recordlist";
+                //发送请求：将数据返回到一个函数中
 
-                var url = "http://10.101.52.2:5000/autosqli/recordlist"
+                //并且响应成功以后会执行then方法中的回调函数
+                axios.get(url).then(function (result) {
+                    //result 是所有返回过来的数据
+                    console.log(JSON.stringify(result))
 
+                    _this.records = result.data.records;
+                })
+
+
+            },
+            actRecord:function (taskid) {
+
+                alert("开始执行："+taskid);
+                _this = this;
+                var url = _this.baseurl+"actrecord/"+taskid
+                axios.get(url).then(function (res) {
+                    var resData = res.data
+                    console.log(JSON.stringify(resData))
+                })
+            },
+            delRecord:function (taskid) {
+                _this = this;
+                var url = _this.baseurl+"delrecord/"+taskid
+                axios.get(url).then(function (res) {
+                    var resData=res.data
+                    if (resData.code == '0000'){
+
+                        alert(resData.message)
+                        location.reload()
+                    }else if (resData.code='0001'){
+
+                        alert(resData.message)
+                    }
+
+                })
+            },
+            getResult:function (taskid) {
+                var _this=this;
+                var url = _this.baseurl+"getresult/"+taskid;
+                window.open(url)
+
+            },
+            getLog:function (taskid) {
+                var _this=this;
+                var url = _this.baseurl+"getlog/"+taskid;
+                window.open(url)
             }
         }
     })

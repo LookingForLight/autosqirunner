@@ -43,6 +43,29 @@ class Client():
             Log.info('设置参数成功')
             return True
 
+    def get_taskid_options(self,taskid):
+        '''通过taskid过去配置参数'''
+        option_get_api = self.server + '/option/' +taskid+ '/get'
+        option_url = {"option":"url"}
+        option_method = {"option":"method"}
+        option_data = {"option": "data"}
+        option_ignore = {"option": "ignore"}
+        opthon_cookie = {"option":"cookie"}
+        url = requests.post(option_get_api,json=option_url,headers = self.headers).json()['url']
+        method = requests.post(option_get_api,json=option_method,headers = self.headers).json()['method']
+        ignore = requests.post(option_get_api, json=option_ignore, headers=self.headers).json()['ignore']
+        result ={}
+        result.setdefault('url', url)
+        result.setdefault('method', method)
+        result.setdefault('ignore', ignore)
+        if method == 'GET':
+            cookie = requests.post(option_get_api, json=opthon_cookie, headers=self.headers).json()['cookie']
+            result.setdefault('cookie', cookie)
+        elif method=='POST':
+            data = requests.post(option_get_api, json=option_data, headers=self.headers).json()['data']
+            result.setdefault('data', data)
+        return result
+
     def start_target_scan(self):
         '''开始扫描的方法,成功开启扫描返回True，开始扫描失败返回False'''
         scan_api = self.server + '/scan/' +self.taskid+ '/start'
@@ -54,6 +77,8 @@ class Client():
             return r.json()['engineid']
         else:
             return  None
+
+
 
     def get_scan_status(self):
         '''获取扫描状态的方法,扫描完成返回True，正在扫描返回False'''
@@ -67,15 +92,14 @@ class Client():
         else:
             self.status = False
 
-    def get_result(self):
+    def get_result(self,taskid):
         '''获取扫描结果的方法，存在SQL注入返回payload和注入类型等，不存在SQL注入返回空'''
-        scan_result_api = self.server + '/scan/' +self.taskid+ '/data'
-        if (self.status):
-             r = requests.get(scan_result_api)
-             if (r.json()['data']):
-                 return r.json()['data']
-             else:
-                 return False
+        scan_result_api = self.server + '/scan/' +taskid+ '/data'
+        r = requests.get(scan_result_api)
+        if (r.json()['data']):
+            return r.json()['data']
+        else:
+            return False
 
     def get_all_task_list(self):
         '''获取所有任务列表'''
@@ -114,12 +138,36 @@ class Client():
         r = requests.get(self.server + '/scan/' + taskid + '/log')
         return r.json()
 
+    def start_taskid_scan(self,taskid):
+        '''开始扫描的方法,成功开启扫描返回True，开始扫描失败返回False'''
+        scan_api = self.server + '/scan/' +taskid+ '/start'
+        print("scan url:",scan_api)
+        r =requests.post(scan_api,json={},headers=self.headers)
+        if r.json()['success']:
+            self.start_scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return r.json()
+        else:
+            return  None
+
+    def get_taskid_status(self,taskid):
+        '''获取扫描状态的方法,扫描完成返回True，正在扫描返回False'''
+        scan_api = self.server + '/scan/' +taskid+ '/status'
+        self.status = requests.get(scan_api).json()['status']
+        if self.status=='terminated':
+            self.end_scan_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return True
+        elif self.status == 'running':
+            return False
+        else:
+            self.status = False
+
 if __name__ == '__main__':
-    my = Client('10.101.52.2','8775',admin_token=' 07df5809300013183d5f9292e6e2d46e')
+    # my = Client('10.101.52.2','8775',admin_token=' 07df5809300013183d5f9292e6e2d46e')
+    my = Client('127.0.0.1','8775',admin_token='d98e80e305f381ee3df4699924d76534')
 
 
-    # print ("taskid:",my.create_new_task())
-    print('takslist:',my.get_all_task_list())
+    print(my.get_taskid_options('0705f4681fc21411'))
+    # print('takslist:',my.get_all_task_list())
     # options = {
     #
     #     "url":"http://127.0.0.1:8088/dvwa/vulnerabilities/sqli",
