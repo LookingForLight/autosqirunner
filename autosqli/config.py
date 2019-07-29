@@ -7,6 +7,9 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     ENV = 'development'
+    sqlmap_server = '127.0.0.1'
+    sqlmap_port = "8775"
+    admin_token = 'e3ecc9dfc6f6711276e5c86f08b50101'
 
 class ProductionConfig(Config):
     DEBUG = False

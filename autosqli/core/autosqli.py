@@ -2,38 +2,24 @@
 
 import requests
 import json
-from datetime import datetime
 
 from utils.log import Log
 class Client():
 
-    def __init__(self,server_ip,server_root,admin_token='',taskid='',filepath=None):
+    def __init__(self,server_ip,server_root,admin_token=''):
         self.server = "http://"+server_ip+":"+server_root
         self.admin_token = admin_token
-        self.taskid = taskid
-        self.filepath = ""
-        self.status = ""
-        self.start_scan_time = ""
-        self.end_scan_time = ""
-        self.engineid=""
         self.headers = {'Content-Type': 'application/json'}
 
     def create_new_task(self):
         '''创建一个新的任务，成功返回taskid'''
         r = requests.get("{0}/task/new".format(self.server))
-        self.taskid = r.json()['taskid']
-        if self.taskid != "":
-            return self.taskid
+        taskid = r.json()['taskid']
+        if taskid:
+            return taskid
         else:
             return None
 
-    def set_task_options(self,options):
-        '''设置任务扫描的url,data等'''
-        option_set_api = self.server + '/option/' +self.taskid+ '/set'
-        status = requests.post(option_set_api,json=options,headers = self.headers).json()
-        if status['success']:
-            Log.info('设置参数成功')
-            return True
 
     def set_taskid_options(self,taskid,options):
         '''通过taskid设置url,data等'''
@@ -66,31 +52,31 @@ class Client():
             result.setdefault('data', data)
         return result
 
-    def start_target_scan(self):
+
+    def start_taskid_scan(self,taskid):
         '''开始扫描的方法,成功开启扫描返回True，开始扫描失败返回False'''
-        scan_api = self.server + '/scan/' +self.taskid+ '/start'
-        print(self.filepath)
+        scan_api = self.server + '/scan/' +taskid+ '/start'
+        print("scan url:",scan_api)
         r =requests.post(scan_api,json={},headers=self.headers)
-        print(r.text)
         if r.json()['success']:
-            self.start_scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            return r.json()['engineid']
+            return r.json()
         else:
             return  None
 
 
 
-    def get_scan_status(self):
+    def get_taskid_status(self,taskid):
         '''获取扫描状态的方法,扫描完成返回True，正在扫描返回False'''
-        scan_api = self.server + '/scan/' +self.taskid+ '/status'
-        self.status = requests.get(scan_api).json()['status']
-        if self.status=='terminated':
-            self.end_scan_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        scan_api = self.server + '/scan/' +taskid+ '/status'
+        status = requests.get(scan_api).json()['status']
+        if status=='terminated':
             return True
-        elif self.status == 'running':
+        elif status == 'running':
             return False
         else:
-            self.status = False
+            return False
+
+
 
     def get_result(self,taskid):
         '''获取扫描结果的方法，存在SQL注入返回payload和注入类型等，不存在SQL注入返回空'''
@@ -138,28 +124,6 @@ class Client():
         r = requests.get(self.server + '/scan/' + taskid + '/log')
         return r.json()
 
-    def start_taskid_scan(self,taskid):
-        '''开始扫描的方法,成功开启扫描返回True，开始扫描失败返回False'''
-        scan_api = self.server + '/scan/' +taskid+ '/start'
-        print("scan url:",scan_api)
-        r =requests.post(scan_api,json={},headers=self.headers)
-        if r.json()['success']:
-            self.start_scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            return r.json()
-        else:
-            return  None
-
-    def get_taskid_status(self,taskid):
-        '''获取扫描状态的方法,扫描完成返回True，正在扫描返回False'''
-        scan_api = self.server + '/scan/' +taskid+ '/status'
-        self.status = requests.get(scan_api).json()['status']
-        if self.status=='terminated':
-            self.end_scan_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            return True
-        elif self.status == 'running':
-            return False
-        else:
-            self.status = False
 
 if __name__ == '__main__':
     # my = Client('10.101.52.2','8775',admin_token=' 07df5809300013183d5f9292e6e2d46e')

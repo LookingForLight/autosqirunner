@@ -4,6 +4,10 @@ from .form import MyForm,AutosqliForm
 from . import sqil
 from ..core.autosqli import Client
 import json
+from datetime import datetime
+from ..config import Conf
+
+client = Client(Conf.sqlmap_server, Conf.sqlmap_port, admin_token=Conf.admin_token)
 
 @sqil.route('/login', methods=['GET', 'POST'])
 def login():
@@ -55,7 +59,6 @@ def recordlist():
 
 
     # client = Client('10.101.52.2','8775',admin_token=' 8aee6e49c56499637ae2d6f6e6733445')
-    client = Client('127.0.0.1','8775',admin_token='d98e80e305f381ee3df4699924d76534')
 
     all_tasks = client.get_all_task_list()
     records=[]
@@ -80,9 +83,19 @@ def addrecord():
     if not request.json:
         abort('400')
 
-    client = Client('127.0.0.1','8775',admin_token='d98e80e305f381ee3df4699924d76534')
-    client.create_new_task()
     options = request.json
+    try:
+        data = json.loads(options['data'])
+    except Exception as e:
+        print("data解析失败")
+        return jsonify({
+            "code":"0001",
+            "message":"参数不是json格式"
+        })
+
+
+    taskid = client.create_new_task()
+
     if options['method'] == 'GET':
         if options['data']:
 
@@ -95,19 +108,19 @@ def addrecord():
             del options['data']
 
     print(options)
-    flag = client.set_task_options(options)
+    flag = client.set_task_options(taskid,options)
 
     if flag:
         print("设置成功")
         return jsonify({
             "code":"0000",
-            'taskid':client.taskid
+            'taskid':taskid,
+            "message":"创建成功:"+taskid
         })
 
 
 @sqil.route('/delrecord/<taskid>',methods=['GET'])
 def delrecord(taskid):
-    client = Client('127.0.0.1','8775',admin_token='d98e80e305f381ee3df4699924d76534')
     status = client.del_a_task(taskid)
     if status:
         return jsonify({
@@ -124,16 +137,14 @@ def delrecord(taskid):
 
 @sqil.route('/actrecord/<taskid>',methods=['GET'])
 def actrecord(taskid):
-    client = Client('127.0.0.1','8775',admin_token='d98e80e305f381ee3df4699924d76534')
     result = client.start_taskid_scan(taskid)
 
     if result:
-        result.setdefault('startTime',client.start_scan_time)
+        result.setdefault('startTime',datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         return jsonify(result)
 
 @sqil.route('/getresult/<taskid>',methods=['GET'])
 def getresult(taskid):
-    client = Client('127.0.0.1','8775',admin_token='d98e80e305f381ee3df4699924d76534')
     result = client.get_result(taskid)
 
     if result:
@@ -154,7 +165,6 @@ def getresult(taskid):
 
 @sqil.route('/getlog/<taskid>',methods=['GET'])
 def getlog(taskid):
-    client = Client('127.0.0.1','8775',admin_token='d98e80e305f381ee3df4699924d76534')
     result = client.get_scan_log(taskid)
 
     if result:
