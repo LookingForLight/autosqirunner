@@ -83,8 +83,9 @@ def addrecord():
     if not request.json:
         abort('400')
 
-    options = request.json
+
     try:
+        options = request.json
         data = json.loads(options['data'])
     except Exception as e:
         print("data解析失败")
@@ -93,22 +94,26 @@ def addrecord():
             "message":"参数不是json格式"
         })
 
-
-    taskid = client.create_new_task()
-
     if options['method'] == 'GET':
         if options['data']:
 
             data = json.loads(options['data'])
             print(type(data))
             del options['data']
-            for key,value in data.items():
-                options[key] = value
+            try:
+                for key,value in data.items():
+                    options[key] = value
+            except Exception as e:
+                return jsonify({
+                    "code": "0001",
+                    "message": "参数不是json格式或者参数不正确"
+                })
+
         else:
             del options['data']
-
+    taskid = client.create_new_task()
     print(options)
-    flag = client.set_task_options(taskid,options)
+    flag = client.set_taskid_options(taskid,options)
 
     if flag:
         print("设置成功")
