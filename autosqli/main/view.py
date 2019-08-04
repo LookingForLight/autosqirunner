@@ -6,6 +6,7 @@ from ..core.autosqli import Client
 import json
 from datetime import datetime
 from ..config import Conf
+import re
 
 client = Client(Conf.sqlmap_server, Conf.sqlmap_port, admin_token=Conf.admin_token)
 
@@ -83,34 +84,21 @@ def addrecord():
     if not request.json:
         abort('400')
 
+    options = request.json
+    print(options)
+    if not check_url(options['url']):
+       return jsonify({
+           "code": "0002",
+           "message": "url格式不正确"
+       })
 
-    try:
-        options = request.json
-        data = json.loads(options['data'])
-    except Exception as e:
-        print("data解析失败")
-        return jsonify({
-            "code":"0001",
-            "message":"参数不是json格式"
-        })
+    if options['method'] == 'GET' and options['data']:
+        for key,value in json.loads(options['data']).items():
+            options[key] = value
+        del options['data']
+    elif options['method'] == 'GET' and not options['data']:
+        del  options['data']
 
-    if options['method'] == 'GET':
-        if options['data']:
-
-            data = json.loads(options['data'])
-            print(type(data))
-            del options['data']
-            try:
-                for key,value in data.items():
-                    options[key] = value
-            except Exception as e:
-                return jsonify({
-                    "code": "0001",
-                    "message": "参数不是json格式或者参数不正确"
-                })
-
-        else:
-            del options['data']
     taskid = client.create_new_task()
     print(options)
     flag = client.set_taskid_options(taskid,options)
@@ -121,6 +109,10 @@ def addrecord():
             "code":"0000",
             'taskid':taskid,
             "message":"创建成功:"+taskid
+        })
+    else:
+        return jsonify({
+            "code":"0005"
         })
 
 
@@ -187,3 +179,20 @@ def getlog(taskid):
             "result": "查无日志",
             "message": "获取成功"
         })
+
+def check_url(url):
+
+    compiler = re.compile(r'^(http|https)://')
+    if compiler.match(url):
+        return True
+    else:
+        return False
+
+def check_switch_data(data):
+    try:
+        data = json.loads(data)
+        data.items()
+    except Exception as e:
+        return False
+    else:
+        return True

@@ -29,7 +29,8 @@
                             <label class="col-sm-2 col-form-label" for="url">TEST URL</label>
                             <div class="col-sm-10">
                                 <input class="form-control" type="text" name="test_url"  placeholder="请求参数" v-model="newRow.url" required>
-                                <p style="color:red" v-if="urlRequired=='true'">url不能为空</p>
+                                <p style="color:red" v-if="urlRequired=='true'">url不正确</p>
+                                <p style="color:red" v-else-if="errorMessage.url!='' ">{[errorMessage.url]}</p>
 
                             </div>
 
@@ -49,7 +50,7 @@
 
 
                                 </div>
-                                <p style="color:red" v-if="methodRequired=='true'">method不能为空</p>
+                                <p style="color:red" v-if="methodRequired=='true'">method不正确</p>
 
                             </div>
 
@@ -58,7 +59,7 @@
                             <label for="request_params" class="col-sm-2 col-form-label">请求参数</label>
                             <div class="col-sm-10">
                                 <textarea id="request_params" name="request_data"  rows="6" class="form-control" v-model="newRow.data" required></textarea>
-                                <p style="color:red" v-if="errorMessage!='' ">{[errorMessage]}</p>
+                                <p style="color:red" v-if="errorMessage.data!='' ">{[errorMessage.data]}</p>
                             </div>
 
 
@@ -131,8 +132,11 @@
             "urlRequired":false,
             "methodRequired":false,
             "dataRequired":false,
-            "baseurl":"http://10.101.52.2:5000/autosqli/",
-            "errorMessage":""
+            "baseurl":"http://127.0.0.1:5000/autosqli/",
+            "errorMessage":{
+                "url":"",
+                "data":""
+            }
         },
         created:function () {
             this.getRecords();
@@ -142,7 +146,6 @@
 
                 var _this = this;
                 var url = _this.baseurl+'addrecord';
-
                 if (_this.newRow.url==""){
                     _this.urlRequired='true'
                     return
@@ -152,7 +155,6 @@
                     _this.methodRequired='true'
                     return
                 }
-
                 axios.post(url,_this.newRow).then(function (res) {
                     var resData = res.data;
                     console.log(JSON.stringify(resData))
@@ -161,13 +163,12 @@
                         location.reload();
                     }else if (resData.code == '0001'){
 
-                        _this.errorMessage = resData.message
+                        _this.errorMessage.data = resData.message
+                    }else if (resData.code=='0002'){
+                        _this.errorMessage.url = resData.message
                     }
 
                 })
-
-                this.newRow = {};
-                console.log(JSON.stringify(this.records))
             },
             getRecords:function () {
                 _this = this;
