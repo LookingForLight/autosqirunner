@@ -65,16 +65,17 @@ def recordlist():
     records=[]
     if all_tasks['success']:
         tasksinfo = all_tasks['tasks']
-
+        n = 1
         for taskid,status in tasksinfo.items():
-            info = {"taskid":taskid,"status":status}
+            info = {"taskid":taskid,"status":status,"id":n}
+            n += 1
             records.append(info)
+        records.reverse()
         return jsonify(
             {
                 "tasks_num":all_tasks['tasks_num'],
                 'success':all_tasks['success'],
                 'records':records
-
             }
         )
 
@@ -115,6 +116,20 @@ def addrecord():
             "code":"0005"
         })
 
+@sqil.route('/saverecord/<taskid>', methods=['POST'])
+def saverecord(taskid):
+
+    if not request.json:
+        abort('400')
+    options = request.json
+    flag = client.set_taskid_options(taskid,options)
+
+    if flag:
+        print("保存成功")
+        return jsonify({
+            "code":"0000",
+            "message":"编辑保存成功:"+taskid
+        })
 
 @sqil.route('/delrecord/<taskid>',methods=['GET'])
 def delrecord(taskid):
@@ -179,6 +194,11 @@ def getlog(taskid):
             "result": "查无日志",
             "message": "获取成功"
         })
+
+@sqil.route('/getoptionlist/<taskid>',methods=['GET'])
+def get_option_list(taskid):
+    option_list = client.get_taskid_options(taskid)
+    return jsonify(option_list)
 
 def check_url(url):
 

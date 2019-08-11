@@ -81,10 +81,77 @@
         </div>
 
     </div>
+    <div class="modal fade bd-example-modal-lg" id="editMyModal">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑参数</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form >
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label" for="url">TEST URL</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" type="text" name="test_url"  placeholder="请求参数" v-model="newRow.url" required>
+                                <p style="color:red" v-if="urlRequired=='true'">url不正确</p>
+                                <p style="color:red" v-else-if="errorMessage.url!='' ">{[errorMessage.url]}</p>
+
+                            </div>
+
+{#                            {[newRow.url]}#}
+                        </div>
+                        <div class="form-group row">
+
+                            <label for="method" class="col-sm-2 col-form-label">请求方法</label>
+                            <div class="col-sm-10 ">
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="get_option" value="GET" v-model="newRow.method">
+                                  <label class="form-check-label" for="get">GET</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="inlineRadioOptions" id="post_option" value="POST" v-model="newRow.method">
+                                  <label class="form-check-label" for="post">POST</label>
+
+
+                                </div>
+                                <p style="color:red" v-if="methodRequired=='true'">method不正确</p>
+
+                            </div>
+
+                        </div>
+                        <div class="form-group row">
+                            <label for="request_params" class="col-sm-2 col-form-label">请求参数</label>
+                            <div class="col-sm-10">
+                                <textarea id="request_params" name="request_data"  rows="6" class="form-control" v-model="newRow.data" required></textarea>
+                                <p style="color:red" v-if="errorMessage.data!='' ">{[errorMessage.data]}</p>
+                            </div>
+
+
+                        </div>
+                        <div class="form-group row">
+                            <label for="ignore_params" class="col-sm-2 col-form-label">忽略注入字段</label>
+                            <div class="col-sm-10">
+                                <input id="ignore_params" name="ignore_params" placeholder="输入不要检测的字段名" type="text" value="" class="form-control" v-model="newRow.ignore">
+                            </div>
+{#                            <P>yyyy{[newRow.ignore]}</P>#}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="closed">关闭</button>
+                    <button type="button" class="btn btn-primary"  @click="saveRecord">保存</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
 
     <div class="row mx-auto w-100 m-2">
 {#        <div class="col-12">#}
-            <table class="table  table-bordered ">
+            <table class="table  table-bordered pre-scrollable">
                 <thead class="thead-dark">
                 <tr>
                     <th>序号</th>
@@ -95,14 +162,16 @@
                 </thead>
                 <tbody>
                 <tr v-for="(record,index) in records">
-                    <td>{[index+1]}</td>
+                    <td>{[record.id]}</td>
                     <td>{[record.taskid]}</td>
                     <td>{[record.status]}</td>
                     <td>
-                            <button type="button" class="btn btn-outline-info btn-sm" @click="actRecord(record.taskid)">运行</button>
-                            <button v-if="record.status=='terminated'" type="button" class="btn btn-outline-info btn-sm" @click="getResult(record.taskid)">查看结果</button>
-                            <button v-if="record.status=='terminated'" type="button" class="btn btn-outline-info btn-sm" @click="getLog(record.taskid)">查看注入日志</button>
-                            <button type="button" class="btn btn-outline-info btn-sm" @click="delRecord(record.taskid)">删除</button>
+                        <button type="button" class="btn btn-outline-info btn-sm" @click="actRecord(record.taskid)">运行</button>
+                        <button v-if="record.status=='terminated'" type="button" class="btn btn-outline-info btn-sm" @click="getResult(record.taskid)">查看结果</button>
+                        <button v-if="record.status=='terminated'" type="button" class="btn btn-outline-info btn-sm" @click="getLog(record.taskid)">查看注入日志</button>
+                        <button type="button" class="btn btn-outline-info btn-sm" @click="editRecord(record.taskid)">编辑</button>
+
+                        <button type="button" class="btn btn-outline-info btn-sm" @click="delRecord(record.taskid)">删除</button>
                     </td>
 
                 </tr>
@@ -129,6 +198,7 @@
                 "ignore":""
 
             },
+            "taskid":"",
             "urlRequired":false,
             "methodRequired":false,
             "dataRequired":false,
@@ -155,6 +225,8 @@
                     _this.methodRequired='true'
                     return
                 }
+
+
                 axios.post(url,_this.newRow).then(function (res) {
                     var resData = res.data;
                     console.log(JSON.stringify(resData))
@@ -171,7 +243,7 @@
                 })
             },
             getRecords:function () {
-                _this = this;
+                var _this = this;
                 //设置请求路径
                 var url = _this.baseurl+"recordlist";
                 //发送请求：将数据返回到一个函数中
@@ -189,15 +261,56 @@
             actRecord:function (taskid) {
 
                 alert("开始执行："+taskid);
-                _this = this;
+                var _this = this;
                 var url = _this.baseurl+"actrecord/"+taskid
                 axios.get(url).then(function (res) {
                     var resData = res.data
                     console.log(JSON.stringify(resData))
                 })
             },
+            editRecord:function (taskid){
+                $('#editMyModal').modal("show");
+                var _this = this;
+                _this.taskid = taskid;
+                var url = _this.baseurl+ "getoptionlist/"+taskid;
+                axios.get(url).then(function (res) {
+                    var resData = res.data;
+                    if (resData&&resData.success&&resData.options){
+                        _this.newRow.url = resData.options.url;
+                        _this.newRow.method = resData.options.method;
+                        if (resData.options.method == 'POST') {
+                            _this.newRow.data = resData.options.data;
+                        }else{
+                            if (resData.options.cookie) {
+                                _this.newRow.data = JSON.stringify({"cookie":resData.options.cookie});
+                            }else{
+                                _this.newRow.data = ""
+                            }
+                        }
+                        _this.newRow.ignore = resData.options.ignore;
+                    }
+                })
+            },
+            saveRecord:function(){
+                var _this = this;
+                var url = _this.baseurl+ "saverecord/"+_this.taskid;
+
+                alert("保存的taksid:"+_this.taskid);
+
+                axios.post(url,_this.newRow).then(function (res) {
+                    var resData = res.data;
+                    console.log(JSON.stringify(resData))
+                    if(resData.code=='0000'){
+                        alert(resData.message)
+                        location.reload();
+                    }else{
+                        alert("保存失败")
+                    }
+
+                })
+            },
             delRecord:function (taskid) {
-                _this = this;
+                var _this = this;
                 var url = _this.baseurl+"delrecord/"+taskid
                 axios.get(url).then(function (res) {
                     var resData=res.data
@@ -222,6 +335,17 @@
                 var _this=this;
                 var url = _this.baseurl+"getlog/"+taskid;
                 window.open(url)
+            },
+            closed:function () {
+                alert("触发关闭事件");
+                var _this= this;
+                _this.newRow={
+                "url":"",
+                "method":"",
+                "data":"",
+                "ignore":""
+
+               }
             }
         }
     })

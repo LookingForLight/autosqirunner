@@ -31,26 +31,10 @@ class Client():
 
     def get_taskid_options(self,taskid):
         '''通过taskid过去配置参数'''
-        option_get_api = self.server + '/option/' +taskid+ '/get'
-        option_url = {"option":"url"}
-        option_method = {"option":"method"}
-        option_data = {"option": "data"}
-        option_ignore = {"option": "ignore"}
-        opthon_cookie = {"option":"cookie"}
-        url = requests.post(option_get_api,json=option_url,headers = self.headers).json()['url']
-        method = requests.post(option_get_api,json=option_method,headers = self.headers).json()['method']
-        ignore = requests.post(option_get_api, json=option_ignore, headers=self.headers).json()['ignore']
-        result ={}
-        result.setdefault('url', url)
-        result.setdefault('method', method)
-        result.setdefault('ignore', ignore)
-        if method == 'GET':
-            cookie = requests.post(option_get_api, json=opthon_cookie, headers=self.headers).json()['cookie']
-            result.setdefault('cookie', cookie)
-        elif method=='POST':
-            data = requests.post(option_get_api, json=option_data, headers=self.headers).json()['data']
-            result.setdefault('data', data)
-        return result
+        option_get_api = self.server + '/option/' +taskid+ '/list'
+        resp = requests.get(option_get_api).json()
+
+        return resp
 
 
     def start_taskid_scan(self,taskid):
