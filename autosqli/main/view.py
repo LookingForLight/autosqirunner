@@ -7,6 +7,8 @@ import json
 from datetime import datetime
 from ..config import Conf
 import re
+from utils.mod_db import database
+from datetime import datetime
 
 client = Client(Conf.sqlmap_server, Conf.sqlmap_port, admin_token=Conf.admin_token)
 
@@ -61,20 +63,19 @@ def recordlist():
 
     # client = Client('10.101.52.2','8775',admin_token=' 8aee6e49c56499637ae2d6f6e6733445')
 
-    all_tasks = client.get_all_task_list()
+    # all_tasks = client.get_all_task_list()
+    all_tasks = task_list()
+
     records=[]
-    if all_tasks['success']:
-        tasksinfo = all_tasks['tasks']
-        n = 1
-        for taskid,status in tasksinfo.items():
-            info = {"taskid":taskid,"status":status,"id":n}
-            n += 1
+    if all_tasks:
+        for taskinfo in all_tasks:
+            print(type(taskinfo[3]))
+            info = {"taskid":taskinfo[1],"status":taskinfo[2],"id":taskinfo[0],"createtime":taskinfo[3].strftime("%Y-%m-%d %H:%M:%S")}
             records.append(info)
-        records.reverse()
         return jsonify(
             {
-                "tasks_num":all_tasks['tasks_num'],
-                'success':all_tasks['success'],
+                "tasks_num":len(all_tasks),
+                'success':'true',
                 'records':records
             }
         )
@@ -101,7 +102,9 @@ def addrecord():
         del  options['data']
 
     taskid = client.create_new_task()
+    insert_task(taskid)
     print(options)
+
     flag = client.set_taskid_options(taskid,options)
 
     if flag:
@@ -208,6 +211,7 @@ def check_url(url):
     else:
         return False
 
+
 def check_switch_data(data):
     try:
         data = json.loads(data)
@@ -216,3 +220,29 @@ def check_switch_data(data):
         return False
     else:
         return True
+
+def status_cn(status):
+    status_cn = "待运行"
+    if status == "not running":
+        status_cn= "待运行"
+    elif status == "running":
+        status_cn="正在运行"
+    elif status =="terminated":
+        status_cn = "运行结束"
+    return status_cn
+
+def task_list():
+    sql = "select * from taskinfo order by id desc "
+    db = database()
+    rows = db.select_data(sql)
+    db._conn.close()
+    return list(rows)
+
+def insert_task(taskid):
+    sql = """insert into taskinfo(taskid,status) value (%s,"not running")"""
+    db = database()
+    db._cursor.execute(sql,taskid)
+    db._conn.commit()
+    db._conn.close()
+
+

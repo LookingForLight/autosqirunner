@@ -9,10 +9,27 @@ class DevelopmentConfig(Config):
     ENV = 'development'
     sqlmap_server = '127.0.0.1'
     sqlmap_port = "8775"
-    admin_token = '8b4957707227bdb21cdf42f7b1c996a1'
+    admin_token = '39e382aa636cb29c3bbf1c58d9eef6e4'
+    DATABASES = {
+            'HOST': 'localhost',
+            'PORT': 3306,
+            'USER': 'root',
+            'PWD': 'root',
+            'DBNAME': 'dbtest'
+    }
 
 class ProductionConfig(Config):
     DEBUG = False
-
+    ENV = 'development'
+    sqlmap_server = '127.0.0.1'
+    sqlmap_port = "8775"
+    admin_token = '39e382aa636cb29c3bbf1c58d9eef6e4'
+    DATABASES = {
+            'HOST': 'localhost',
+            'PORT': 3306,
+            'USER': 'root',
+            'PWD': '123456',
+            'DBNAME': 'db_atp'
+    }
 
 Conf = DevelopmentConfig
