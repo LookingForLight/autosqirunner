@@ -1,7 +1,18 @@
 # -*-coding:utf-8-*-
 from flask_wtf import FlaskForm
 from wtforms import validators, fields, widgets
-
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, Index,DateTime
+from datetime import datetime
+from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import create_engine
+Base = declarative_base()
+class TaskInfo(Base):
+    __tablename__ = 'taskinfo'
+    id = Column(Integer,primary_key=True,autoincrement=True)
+    taskid = Column(String(45))
+    status = Column(String(45))
+    createtime=Column(DateTime(),default=datetime.now)
 
 class MyForm(FlaskForm):
     Username = fields.StringField(

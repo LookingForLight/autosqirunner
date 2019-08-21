@@ -1,6 +1,12 @@
 import pymysql
 from autosqli.config import Conf
+from autosqli.main.form import TaskInfo
+from sqlalchemy import create_engine, and_
+from sqlalchemy.orm import sessionmaker
 
+class sqlalchemy_op:
+    def __init__(self):
+        self._dburl = "mysql+pymysql://root:root@localhost/taskinfo?charset=utf8"
 class database:
 
     def __init__(self):
@@ -44,5 +50,15 @@ def insert_task(taskid):
     db._conn.commit()
     db._conn.close()
 if __name__ =="__main__":
-    insert_task("555555111444")
+    dburl="mysql+mysqlconnector://root:root@localhost/dbtest?charset=utf8"
+    engine = create_engine(dburl)
+    DBsession = sessionmaker(bind=engine)
+    session = DBsession()
 
+    rows = session.query(TaskInfo.taskid)
+    print("count:"+str(rows.count()))
+    for row in rows:
+        print(row.taskid)
+    session.close()
+
+    # print(task_list())
