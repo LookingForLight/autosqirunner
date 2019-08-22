@@ -1,6 +1,6 @@
 #-*-coding:utf-8-*-
 from flask import Flask, render_template, url_for, request, redirect,abort,jsonify
-from .form import MyForm,AutosqliForm
+from .form import MyForm,AutosqliForm,TaskInfo
 from . import sqil
 from ..core.autosqli import Client
 import json
@@ -9,6 +9,9 @@ from ..config import Conf
 import re
 from utils.mod_db import database
 from datetime import datetime
+from flask_paginate import Pagination,get_page_parameter
+from utils.mod_db import sqlalchemy_op
+
 
 client = Client(Conf.sqlmap_server, Conf.sqlmap_port, admin_token=Conf.admin_token)
 
@@ -27,7 +30,21 @@ def login():
 
 @sqil.route('/')
 def index():
-    return render_template('index.html')
+    db = sqlalchemy_op()
+
+    PER_PAGE = 10
+    total =db._session.query(TaskInfo).count()
+    page = request.args.get(get_page_parameter(),type=int,default=1)
+    start = (page-1)*PER_PAGE
+    end = start+PER_PAGE
+    pagination = Pagination(bs_version=4,page=page,total=total)
+    taskinfo = db._session.query(TaskInfo).order_by(TaskInfo.id.desc()).slice(start,end)
+
+    context={
+        "pagination":pagination,
+        "taskinfo":taskinfo
+    }
+    return render_template('autosqli/bootvue2.html',**context)
 
 @sqil.route('/home',methods=['GET', 'POST'])
 def autosqli():

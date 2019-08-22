@@ -6,7 +6,12 @@ from sqlalchemy.orm import sessionmaker
 
 class sqlalchemy_op:
     def __init__(self):
-        self._dburl = "mysql+pymysql://root:root@localhost/taskinfo?charset=utf8"
+        self._dburl = "mysql+mysqlconnector://root:root@localhost/dbtest?charset=utf8"
+        self._engine=create_engine(self._dburl)
+        self._dbsession = sessionmaker(bind=self._engine)
+        self._session=self._dbsession()
+
+
 class database:
 
     def __init__(self):
@@ -50,15 +55,15 @@ def insert_task(taskid):
     db._conn.commit()
     db._conn.close()
 if __name__ =="__main__":
-    dburl="mysql+mysqlconnector://root:root@localhost/dbtest?charset=utf8"
-    engine = create_engine(dburl)
-    DBsession = sessionmaker(bind=engine)
-    session = DBsession()
-
-    rows = session.query(TaskInfo.taskid)
+    # dburl="mysql+mysqlconnector://root:root@localhost/dbtest?charset=utf8"
+    # engine = create_engine(dburl)
+    # DBsession = sessionmaker(bind=engine)
+    # session = DBsession()
+    db2 =sqlalchemy_op()
+    rows = db2._session.query(TaskInfo.taskid)
     print("count:"+str(rows.count()))
     for row in rows:
         print(row.taskid)
-    session.close()
+    db2._session.close()
 
     # print(task_list())
