@@ -5,6 +5,7 @@
     <title>在线sql注入</title>
     {{ bootstrap.load_css() }}
     {{ render_static('css', 'css/signin.css') }}
+    {{ render_static('css', 'css/zpageNav.css') }}
 </head>
 <body>
 
@@ -149,7 +150,7 @@
 
     </div>
 
-    <div class="row mx-auto w-100 m-2">
+    <div class="row mx-auto w-100 m-2 pre-scrollable">
 {#        <div class="col-12">#}
             <table class="table  table-bordered pre-scrollable">
                 <thead class="thead-dark">
@@ -180,12 +181,18 @@
                 </tbody>
             </table>
     </div>
+    <div class="row mx-auto w-50 m-2">
+        <zpagenav v-bind:page="pagination.page" v-bind:page-size="pagination.pageSize" v-bind:total="pagination.total"
+        	v-bind:max-page="pagination.maxPage"  v-on:pagehandler="pageHandler">
+        </zpagenav>
 
+    </div>
 </div>
 
 {{ bootstrap.load_js() }}
 {{ render_static('js', 'js/index.js') }}
 {{ render_static('js', 'js/vue.min.js') }}
+{{ render_static('js', 'js/zpageNav.js') }}
 {{ render_static('js', 'js/axios.min.js') }}
 <script>
     new Vue({
@@ -209,10 +216,17 @@
             "errorMessage":{
                 "url":"",
                 "data":""
+            },
+            "pagination":{
+                "page":1,
+                "pageSize":10,
+                "total":100,
+                "maxPage":9
             }
         },
         created:function () {
-            this.getRecords();
+            this.pageHandler(1);
+
         },
         filters:{
           filterStatus:function (status) {
@@ -230,6 +244,12 @@
           }
         },
         methods:{
+            pageHandler: function (page) {
+                	//here you can do custom state update
+                  this.pagination.page = page;
+                  this.getRecords(page);
+
+            },
             addRecord:function () {
 
                 var _this = this;
@@ -260,10 +280,10 @@
 
                 })
             },
-            getRecords:function () {
+            getRecords:function (page) {
                 var _this = this;
                 //设置请求路径
-                var url = _this.baseurl+"recordlist";
+                var url = _this.baseurl+"recordlist?page="+page;
                 //发送请求：将数据返回到一个函数中
 
                 //并且响应成功以后会执行then方法中的回调函数
@@ -272,6 +292,9 @@
                     console.log(JSON.stringify(result))
 
                     _this.records = result.data.records;
+                    _this.pagination.page = page;
+                    _this.pagination.total = result.data.tasks_num;
+                    _this.pagination.maxPage = result.data.totalpage;
                 })
 
 

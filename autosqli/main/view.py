@@ -11,6 +11,7 @@ from utils.mod_db import database
 from datetime import datetime
 from flask_paginate import Pagination,get_page_parameter
 from utils.mod_db import sqlalchemy_op
+import math
 
 
 client = Client(Conf.sqlmap_server, Conf.sqlmap_port, admin_token=Conf.admin_token)
@@ -28,23 +29,36 @@ def login():
     return render_template('admin/login.html', form = form)
 
 
-@sqil.route('/')
+@sqil.route('/',methods=['GET'])
 def index():
     db = sqlalchemy_op()
 
-    PER_PAGE = 10
+    page_size = 10
     total =db._session.query(TaskInfo).count()
-    page = request.args.get(get_page_parameter(),type=int,default=1)
-    start = (page-1)*PER_PAGE
-    end = start+PER_PAGE
-    pagination = Pagination(bs_version=4,page=page,total=total)
-    taskinfo = db._session.query(TaskInfo).order_by(TaskInfo.id.desc()).slice(start,end)
+    totalpage = math.ceil(total/page_size)
+    page = int(request.args.get('page'))
+    if page == 1:
+        start = 0
+        end = page_size
+    elif page >1:
+        start = (page-1) * page_size
+        end = start+page_size
+    tasksinfo = db._session.query(TaskInfo).order_by(TaskInfo.id.desc()).slice(start,end)
+    records = []
+    if tasksinfo:
+        for taskinfo in tasksinfo:
+            info = {"taskid": taskinfo.taskid, "status": taskinfo.status, "id": taskinfo.id,
+                    "createtime": taskinfo.createtime}
+            records.append(info)
+        return jsonify(
+            {
+                "tasks_num": total,
+                'success': 'true',
+                'records': records,
+                "totalpage":totalpage
+            }
+        )
 
-    context={
-        "pagination":pagination,
-        "taskinfo":taskinfo
-    }
-    return render_template('autosqli/bootvue2.html',**context)
 
 @sqil.route('/home',methods=['GET', 'POST'])
 def autosqli():
@@ -77,23 +91,20 @@ def home():
 @sqil.route('/recordlist',methods=['GET'])
 def recordlist():
 
-
-    # client = Client('10.101.52.2','8775',admin_token=' 8aee6e49c56499637ae2d6f6e6733445')
-
-    # all_tasks = client.get_all_task_list()
-    all_tasks = task_list()
-
-    records=[]
-    if all_tasks:
-        for taskinfo in all_tasks:
-            print(type(taskinfo[3]))
-            info = {"taskid":taskinfo[1],"status":taskinfo[2],"id":taskinfo[0],"createtime":taskinfo[3].strftime("%Y-%m-%d %H:%M:%S")}
+    page = int(request.args.get('page'))
+    tasksinfo = paginate_data(page)
+    records = []
+    if tasksinfo['tasksinfo']:
+        for taskinfo in tasksinfo['tasksinfo']:
+            info = {"taskid": taskinfo.taskid, "status": taskinfo.status, "id": taskinfo.id,
+                    "createtime": taskinfo.createtime.strftime("%Y-%m-%d %H:%M:%S")}
             records.append(info)
         return jsonify(
             {
-                "tasks_num":len(all_tasks),
-                'success':'true',
-                'records':records
+                "tasks_num": tasksinfo['total'],
+                'success': 'true',
+                'records': records,
+                "totalpage":tasksinfo['totalpage']
             }
         )
 
@@ -262,4 +273,23 @@ def insert_task(taskid):
     db._conn.commit()
     db._conn.close()
 
+def paginate_data(page=1,page_size=10):
+    db = sqlalchemy_op()
 
+    page_size = page_size
+    total = db._session.query(TaskInfo).count()
+    totalpage = math.ceil(total/page_size)
+    page = page
+    if page == 1:
+        start = 0
+        end = page_size
+    elif page >1:
+        start = (page-1) * page_size
+        end = start+page_size
+    tasksinfo = db._session.query(TaskInfo).order_by(TaskInfo.id.desc()).slice(start,end)
+    db._session.close()
+    return {
+        "tasksinfo":tasksinfo,
+        "totalpage":totalpage,
+        "total":total
+    }
