@@ -6,6 +6,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, In
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
+from utils.mod_db import sqlalchemy_op
 Base = declarative_base()
 class TaskInfo(Base):
     __tablename__ = 'taskinfo'
@@ -14,6 +15,9 @@ class TaskInfo(Base):
     status = Column(String(45))
     createtime=Column(DateTime(),default=datetime.now)
 
+def init_db():
+    sql_db = sqlalchemy_op()
+    Base.metadata.create_all(sql_db._engine)
 class MyForm(FlaskForm):
     Username = fields.StringField(
         label='用户名1',

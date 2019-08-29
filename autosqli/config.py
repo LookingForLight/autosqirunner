@@ -9,7 +9,7 @@ class DevelopmentConfig(Config):
     ENV = 'development'
     sqlmap_server = '127.0.0.1'
     sqlmap_port = "8775"
-    admin_token = '39e382aa636cb29c3bbf1c58d9eef6e4'
+    admin_token = '2193a9c30aff56fdc1fb54b912938479'
     DATABASES = {
             'HOST': 'localhost',
             'PORT': 3306,
@@ -17,7 +17,7 @@ class DevelopmentConfig(Config):
             'PWD': 'root',
             'DBNAME': 'dbtest'
     }
-
+    db_url = "mysql+mysqlconnector://root:root@localhost/dbtest?charset=utf8"
 class ProductionConfig(Config):
     DEBUG = False
     ENV = 'development'
@@ -31,5 +31,6 @@ class ProductionConfig(Config):
             'PWD': '123456',
             'DBNAME': 'db_atp'
     }
+    db_url = "mysql+mysqlconnector://root:root@localhost/dbtest?charset=utf8"
 
 Conf = DevelopmentConfig

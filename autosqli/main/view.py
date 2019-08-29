@@ -15,6 +15,7 @@ import math
 
 
 client = Client(Conf.sqlmap_server, Conf.sqlmap_port, admin_token=Conf.admin_token)
+db=sqlalchemy_op()
 
 @sqil.route('/login', methods=['GET', 'POST'])
 def login():
@@ -78,14 +79,14 @@ def autosqli():
             return redirect('http://www.baidu.com')
         else:
             print(form.errors)
-    return render_template('autosqli/index.html',form = form)
+    return render_template('autosqli/demo.html', form = form)
 
 
 @sqil.route('/index',methods=['GET'])
 def home():
 
     if request.method == 'GET':
-        return render_template('autosqli/bootvue.html')
+        return render_template('autosqli/index.html')
 
 
 @sqil.route('/recordlist',methods=['GET'])
@@ -96,10 +97,15 @@ def recordlist():
     records = []
     if tasksinfo['tasksinfo']:
         for taskinfo in tasksinfo['tasksinfo']:
-            info = {"taskid": taskinfo.taskid, "status": taskinfo.status, "id": taskinfo.id,
+            taskstatus = client.get_taskid_status(taskinfo.taskid)
+            if taskstatus != taskinfo.status:
+                db._session.query(TaskInfo).filter(TaskInfo.taskid == taskinfo.taskid).update({"status": taskstatus})
+            info = {"taskid": taskinfo.taskid, "status": taskstatus, "id": taskinfo.id,
                     "createtime": taskinfo.createtime.strftime("%Y-%m-%d %H:%M:%S")}
             records.append(info)
-        return jsonify(
+    db._session.commit()
+    db._session.close()
+    return jsonify(
             {
                 "tasks_num": tasksinfo['total'],
                 'success': 'true',
@@ -183,9 +189,9 @@ def actrecord(taskid):
     result = client.start_taskid_scan(taskid)
 
     if result:
-        result.setdefault('startTime',datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        return jsonify(result)
+        update_status(taskid)
 
+    return jsonify(result)
 @sqil.route('/getresult/<taskid>',methods=['GET'])
 def getresult(taskid):
     result = client.get_result(taskid)
@@ -274,7 +280,6 @@ def insert_task(taskid):
     db._conn.close()
 
 def paginate_data(page=1,page_size=10):
-    db = sqlalchemy_op()
 
     page_size = page_size
     total = db._session.query(TaskInfo).count()
@@ -287,9 +292,14 @@ def paginate_data(page=1,page_size=10):
         start = (page-1) * page_size
         end = start+page_size
     tasksinfo = db._session.query(TaskInfo).order_by(TaskInfo.id.desc()).slice(start,end)
-    db._session.close()
     return {
         "tasksinfo":tasksinfo,
         "totalpage":totalpage,
         "total":total
     }
+
+def update_status(taskid):
+    db._session.query(TaskInfo).filter(TaskInfo.taskid==taskid).update({"status":"runnning"})
+    db._session.commit()
+    db._session.close()
+

@@ -1,13 +1,11 @@
 import pymysql
 from autosqli.config import Conf
-from autosqli.main.form import TaskInfo
 from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker
 
 class sqlalchemy_op:
     def __init__(self):
-        self._dburl = "mysql+mysqlconnector://root:root@localhost/dbtest?charset=utf8"
-        self._engine=create_engine(self._dburl)
+        self._engine=create_engine(Conf.db_url)
         self._dbsession = sessionmaker(bind=self._engine)
         self._session=self._dbsession()
 
@@ -59,11 +57,11 @@ if __name__ =="__main__":
     # engine = create_engine(dburl)
     # DBsession = sessionmaker(bind=engine)
     # session = DBsession()
-    db2 =sqlalchemy_op()
-    rows = db2._session.query(TaskInfo.taskid)
-    print("count:"+str(rows.count()))
-    for row in rows:
-        print(row.taskid)
-    db2._session.close()
-
+    # db2 =sqlalchemy_op()
+    # rows = db2._session.query(TaskInfo.taskid)
+    # print("count:"+str(rows.count()))
+    # for row in rows:
+    #     print(row.taskid)
+    # db2._session.close()
+    pass
     # print(task_list())

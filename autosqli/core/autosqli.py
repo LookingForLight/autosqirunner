@@ -51,14 +51,16 @@ class Client():
 
     def get_taskid_status(self,taskid):
         '''获取扫描状态的方法,扫描完成返回True，正在扫描返回False'''
-        scan_api = self.server + '/scan/' +taskid+ '/status'
-        status = requests.get(scan_api).json()['status']
-        if status=='terminated':
-            return True
-        elif status == 'running':
-            return False
-        else:
-            return False
+        status = "not running"
+        scan_api = self.server + '/scan/' + taskid + '/status'
+        try:
+
+            status = requests.get(scan_api).json()['status']
+        except Exception as e:
+            # print(e)
+            return status
+
+        return status
 
 
 
