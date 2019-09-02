@@ -237,6 +237,23 @@ def get_option_list(taskid):
     option_list = client.get_taskid_options(taskid)
     return jsonify(option_list)
 
+@sqil.route('/taskinfo',methods=['GET'])
+
+def taskinfo():
+    """
+       sql注入demo接口
+    """
+    id = request.args.get('id')
+    res = sqli_demo(id)
+    result = []
+    for re in res:
+        taskinfo = {"id":re[0],"taskid":re[1]}
+        result.append(taskinfo)
+    return jsonify({
+
+        "result":result
+    })
+
 def check_url(url):
 
     compiler = re.compile(r'^(http|https)://')
@@ -303,3 +320,13 @@ def update_status(taskid):
     db._session.commit()
     db._session.close()
 
+def sqli_demo(id):
+    mydb = database()
+    sql = "select * from sqlimap.taskinfo where id = %s " % (id)
+    print(sql)
+    mydb._cursor.execute(sql)
+
+    rows = mydb._cursor.fetchall()
+    mydb._conn.close()
+
+    return rows
