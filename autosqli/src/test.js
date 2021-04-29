@@ -20,7 +20,7 @@ function countDown(endtime, servertime) {//倒计时
       setTimeout(() =>{
         servertime += 1000;
         that.countDown(endtime, servertime);
-      }, 1000);
+      }, 2000);
     } else {
       window.location.reload();
     }
